@@ -1,0 +1,498 @@
+*------------------------------------------------------------*;
+* Macro Variables for input, output data and files;
+  %let dm_datalib =;
+  %let dm_lib     = WORK;
+  %let dm_folder  = %sysfunc(pathname(work));
+*------------------------------------------------------------*;
+*------------------------------------------------------------*;
+  * Preparing the training data for modeling;
+*------------------------------------------------------------*;
+%macro dm_rejected;
+'AccountID'n 'Activity_Status'n 'AvgSale3Yr_DP'n 'Customer_Value'n
+'Demog_Age'n 'demog_inc'n 'demog_pr'n 'Home_Flag'n '_DISTANCEINT_'n
+   '_DISTANCENOM_'n '_DISTANCE_'n '_STANDARDIZED_DISTANCE_'n
+%mend dm_rejected;
+
+data &dm_datalib.._input_94SIAI4DPURFQ0U1N5NDOMP12/ SESSREF=&_SESSREF_;
+   set &dm_datalib..'DM_1U6M2559DWHBP4FZM378E57OV'n;
+
+
+   length _WARN_ $4;
+   label _WARN_ = 'Warnings';
+   label _CLUSTER_ID_ = 'Cluster ID';
+   label _DISTANCE_ = 'Distance to Centroid';
+   label _DISTANCEINT_ = 'Interval Distance to Centroid';
+   label _DISTANCENOM_ = 'Nominal Distance to Centroid';
+
+   _i_ = 0;
+   _j_ = 0;
+   _k_ = 0;
+   _l_ = 0;
+   _dist_ = 0;
+   _minDist_ = 0;
+   _found_ = 0;
+   _unknown_ = 0;
+   _unknownflag_ = 0;
+   _gammaVal_ =      9743.5489763832;
+   _totalMindist2cntr_ = 0;
+   _missingflag4Nom_ = 0;
+   _missingflag4Int_ = 0;
+   _numberOfNomVars_ = 3;
+   _numberOfIntVars_ = 10;
+   _minDistInt_ = 0;
+   _minDistNom_ = 0;
+   _DISTANCEINT_ = 0;
+   _DISTANCENOM_ = 0;
+   label _STANDARDIZED_DISTANCE_ = 'Standardized Distance to Centroid';
+
+   drop _i_;
+   drop _j_;
+   drop _k_;
+   drop _l_;
+   drop _dist_;
+   drop _minDist_;
+   drop _minDistInt_;
+   drop _minDistNom_;
+   drop _unknown_;
+   drop _unknownflag_;
+   drop _found_;
+   drop _gammaVal_;
+   drop _totalMindist2cntr_;
+   drop _missingflag4Nom_;
+   drop _missingflag4Int_;
+   drop _numberOfNomVars_;
+   drop _numberOfIntVars_;
+   drop _intMindist2cntr_;
+   drop _nomMindist2cntr_;
+
+   array _nomVals_55513632{3} _temporary_;
+   array _intVals_55513632{10} _temporary_;
+   array _missingArr_55513632{3} _temporary_;
+   array _intStdVals_55513632{10} _temporary_;
+   array _intVars_55513632[10] _temporary_;
+   _intVars_55513632[1] =
+   AvgSale3Yr;
+   _intVars_55513632[2] =
+   AvgSale3Yr_DP;
+   _intVars_55513632[3] =
+   AvgSaleLife;
+   _intVars_55513632[4] =
+   CntPurLife;
+   _intVars_55513632[5] =
+   CntPurLife_DP;
+   _intVars_55513632[6] =
+   CntTotPromo;
+   _intVars_55513632[7] =
+   CustTenure;
+   _intVars_55513632[8] =
+   Demog_Homeval;
+   _intVars_55513632[9] =
+   LastProdAmt;
+   _intVars_55513632[10] =
+   MnthsLastPur;
+   ********* define class variables ********;
+   array _allNomVars_55513632 {3} $12 _temporary_ ;
+   array _nomNumVars_55513632 [3]  _temporary_;
+   length _Cnt1Yr_DP_ $2; drop _Cnt1Yr_DP_;
+   _Cnt1Yr_DP_ = left(trim(put(Cnt1Yr_DP,BEST2.)));
+   _allNomVars_55513632[1] =
+    _Cnt1Yr_DP_ ;
+   _nomNumVars_55513632[1] =
+   Cnt1Yr_DP;
+   length _CntPur3Yr_ $2; drop _CntPur3Yr_;
+   _CntPur3Yr_ = left(trim(put(CntPur3Yr,BEST2.)));
+   _allNomVars_55513632[2] =
+    _CntPur3Yr_ ;
+   _nomNumVars_55513632[2] =
+   CntPur3Yr;
+   length _CntPur3Yr_DP_ $2; drop _CntPur3Yr_DP_;
+   _CntPur3Yr_DP_ = left(trim(put(CntPur3Yr_DP,BEST2.)));
+   _allNomVars_55513632[3] =
+    _CntPur3Yr_DP_ ;
+   _nomNumVars_55513632[3] =
+   CntPur3Yr_DP;
+   array _cntrcoordsInt_55513632{3,10} _temporary_ (
+       11.1651074255559
+       11.0746051639672
+       9.36009800226059
+       17.5958349038817
+        9.6710327930657
+       14.3823030531484
+       86.1300414625118
+        106954.01413497
+       12.1446324915238
+       17.5604975499426
+       14.8958821000876
+       14.7510764507167
+       12.4846300276287
+       9.28922321154228
+       5.21430764507197
+       13.3457783236088
+       65.4127724900043
+       113224.453669048
+       16.2630003070327
+       18.2657660423715
+       18.7239101258189
+       18.4737723187555
+       15.5158082684248
+       6.80407429598158
+         3.535889754343
+       12.1571000599174
+       61.8595566207403
+       118171.547094063
+       19.7563397243832
+       18.3989215098871
+   );
+   array _stdcntrcoordsInt_55513632 {3,10} _temporary_ (
+        -0.437685231291
+        -0.381822293418
+        -0.443772429453
+         0.925410804703
+          1.01326968932
+         0.287818481647
+         0.429615257216
+        -0.061339230146
+        -0.387661015312
+        -0.189459629472
+        -0.104768669681
+        -0.048137278841
+        -0.091746994636
+        -0.057005906748
+         0.019834587904
+         0.067219131989
+        -0.130781119622
+         0.003083839696
+        -0.082323028381
+         -0.01686738095
+         0.236826317755
+         0.289743185361
+         0.249760735021
+        -0.350922598116
+        -0.354296459474
+        -0.185762436564
+        -0.226894622898
+         0.053910730459
+         0.176675019667
+         0.015718225508
+   );
+   array _stdscaleInt_55513632 {10} _temporary_ (
+       11.2063354748393
+       11.0177896103906
+       8.87587008305937
+       8.45528337976953
+       4.48617644136119
+        4.6986753639419
+       36.9689559547178
+       97332.2064511567
+       13.4878986296572
+       4.08632773759242
+   );
+   array _stdcenterInt_55513632 {10} _temporary_ (
+       16.0699549597855
+       15.2814428614036
+        13.298964432529
+       9.77122430741733
+       5.12532618409294
+       13.0299374441465
+       70.2476139410187
+       112924.296747095
+        17.373364968722
+        18.334691689008
+   );
+   array _cntrcoordsNom_55513632{3,3} _temporary_ (
+                      7
+                      6
+                      4
+                      7
+                      5
+                      3
+                      7
+                      2
+                      2
+   );
+   array _nomLevels_55513632 {3,19} $74 _temporary_ (
+    '0'
+    '1'
+    '2'
+    '3'
+    '4'
+    '5'
+    '6'
+    '7'
+    '8'
+    '9'
+    '10'
+    '11'
+    '12'
+    '13'
+    '14'
+    '15'
+    '16'
+    '17'
+   ' '
+   ,
+    '0'
+    '1'
+    '2'
+    '3'
+    '4'
+    '5'
+    '6'
+    '7'
+    '8'
+    '9'
+    '10'
+    '11'
+    '12'
+    '13'
+    '14'
+    '15'
+    '16'
+    '17'
+    '18'
+   ,
+    '0'
+    '1'
+    '2'
+    '3'
+    '4'
+    '5'
+    '6'
+    '7'
+    '8'
+    '9'
+    '10'
+   ' '
+   ' '
+   ' '
+   ' '
+   ' '
+   ' '
+   ' '
+   ' '
+
+   );
+   array _nomModeLevels_55513632 {3} _temporary_ (
+                      7
+                      3
+                      2
+   );
+   array _nomType_55513632 {3} _temporary_ (
+                      1
+                      1
+                      1
+   );
+   array _nomVarLevels_55513632 {3} _temporary_ (
+                     18
+                     19
+                     11
+   );
+
+   *************** check missing interval value ******************;
+   _missingflag4Int_ = 0;
+   do _i_ = 1 to _numberOfIntVars_ until(_missingflag4Int_);
+      if missing( _intVars_55513632[_i_] ) then
+         _missingflag4Int_ = 1;
+   end;
+
+
+   *************** check missing and unknown nominal value ******************;
+   _missingflag4Nom_ = 0;
+   _k_ = 1;
+   do _i_ = 1 to _numberOfNomVars_;
+      _missingArr_55513632[_i_] = 0;
+      if _nomType_55513632[_i_] = 1 then do;
+         if missing( _nomNumVars_55513632[_k_])  then do;
+            _missingflag4Nom_ = 1;
+            _missingArr_55513632[_i_] = 1;
+         end;
+         _k_ = _k_ + 1;
+      end;
+   end;
+   if _missingflag4Int_ = 1 or _missingflag4Nom_ = 1 then
+      substr(_WARN_, 1, 1) = 'M';
+   *************** check unknown nominal value ******************;
+   _unknownflag_ = 0;
+   do _i_=1 to _numberOfNomVars_;
+      _unknown_ = 1;
+      do _j_=1 to _nomVarLevels_55513632[_i_] until (_unknown_ = 0);
+         if _allNomVars_55513632[_i_] = _nomLevels_55513632[_i_, _j_] then do;
+            _unknown_ = 0;
+         end;
+      end;
+      if _missingArr_55513632[_i_]  then
+         _unknown_ = 0;
+      if _unknown_ = 1 then do;
+         _unknownflag_ = 1;
+      end;
+   end;
+   if _unknownflag_ = 1 then
+      substr(_WARN_, 2, 1) = 'U';
+   ********** prepare nominal variable values *********;
+   do _i_=1 to _numberOfNomVars_;
+      _nomVals_55513632[_i_] = 1.0;
+      _found_=0;
+      do _j_=1 to _nomVarLevels_55513632[_i_] until (_found_ = 1);
+         if _allNomVars_55513632[_i_] = _nomLevels_55513632[_i_, _j_] then do;
+            _nomVals_55513632[_i_] = _j_ ;
+            _found_=1;
+         end;
+      end;
+   end;
+   ********** prepare interval variable values *********;
+   do _i_ = 1 to _numberOfIntVars_;
+      if missing (_intVars_55513632[_i_] ) then do;
+         _intVals_55513632[_i_] = .;
+         _intStdVals_55513632[_i_] = .;
+      end; else do;
+         if missing (_stdscaleInt_55513632[_i_] ) then do;
+            _intStdVals_55513632[_i_] = ( _intVars_55513632[_i_] -  _stdcenterInt_55513632[_i_]);
+         end; else do;
+            _intStdVals_55513632[_i_] = ( _intVars_55513632[_i_] -  _stdcenterInt_55513632[_i_])
+                  /  _stdscaleInt_55513632[_i_];
+         end;
+         _intVals_55513632[_i_] = _intVars_55513632[_i_];
+      end;
+   end;
+   ****************** find the closest cluster ******************;
+   if _missingflag4Int_ > 0 | _missingflag4Nom_ > 0 | _unknownflag_ = 1 then
+   do;
+      _CLUSTER_ID_ = .;
+      _DISTANCE_ = .;
+      _minDistInt_ = .;
+      _minDistNom_ = .;
+      _STANDARDIZED_DISTANCE_ = .;
+   end;
+   else
+   do;
+      _CLUSTER_ID_ = .;
+      _minDist_ =  8.9884656743115E307;
+      do _i_=1 to                    3;
+         _intMindist2cntr_ = 0;
+         do _j_=1 to                   10;
+            _dist_ = _intStdVals_55513632{_j_} - _stdcntrcoordsInt_55513632{_i_,_j_};
+            _dist_ = _dist_ ** 2;
+            _intMindist2cntr_ = _intMindist2cntr_ + _dist_;
+         end;
+         _intMindist2cntr_ = _intMindist2cntr_ **                   0.5;
+         _nomMindist2cntr_ = 0;
+         do _j_=1 to _numberOfNomVars_;
+            if( _nomVals_55513632[_j_] ^= _cntrcoordsNom_55513632[ _i_,_j_]) then do;
+               _nomMindist2cntr_ = _nomMindist2cntr_ + 1;
+            end;
+         end;
+         _totalMindist2cntr_ = _intMindist2cntr_ **                    2 + _gammaVal_ * _nomMindist2cntr_;
+         if( _minDist_ > _totalMindist2cntr_) then do;
+            _CLUSTER_ID_ = _i_;
+            _minDist_ = _totalMindist2cntr_;
+            _minDistInt_ = _intMindist2cntr_;
+            _minDistNom_ = _nomMindist2cntr_;
+         end;
+         _STANDARDIZED_DISTANCE_ = _minDist_;
+         _DISTANCEINT_ = _minDistInt_;
+         _DISTANCENOM_ = _minDistNom_;
+      end;
+      _DISTANCE_ =  8.9884656743115E307;
+      _i_ = _CLUSTER_ID_;
+      _intMindist2cntr_ = 0;
+      do _j_=1 to                   10;
+         _dist_ = _intVals_55513632{_j_} - _cntrcoordsInt_55513632{_i_,_j_};
+         _dist_ = _dist_ ** 2;
+         _intMindist2cntr_ = _intMindist2cntr_ + _dist_;
+      end;
+      _intMindist2cntr_ = _intMindist2cntr_ **                   0.5;
+      _DISTANCE_ = _intMindist2cntr_ **                    2 + _gammaVal_ * _minDistNom_;
+      _DISTANCEINT_ = _intMindist2cntr_;
+      _DISTANCENOM_ = _minDistNom_;
+   end;
+
+
+
+
+* Imputation Method = MEDIAN ;
+Label 'IMP_AvgSale3Yr_DP'n = 'Imputed AvgSale3Yr_DP';
+Length 'IMP_AvgSale3Yr_DP'n 8;
+if missing('AvgSale3Yr_DP'n) then do;
+   'IMP_AvgSale3Yr_DP'n = 14;
+end;
+else 'IMP_AvgSale3Yr_DP'n = 'AvgSale3Yr_DP'n;
+
+   drop %dm_rejected;
+run;
+*------------------------------------------------------------*;
+  * Training for gradboost;
+*------------------------------------------------------------*;
+*------------------------------------------------------------*;
+  * Initializing Variable Macros;
+*------------------------------------------------------------*;
+%macro dm_unary_input;
+%mend dm_unary_input;
+%global dm_num_unary_input;
+%let dm_num_unary_input = 0;
+%macro dm_interval_input;
+'AvgSale3Yr'n 'AvgSaleLife'n 'CntPurLife'n 'CntPurLife_DP'n 'CntTotPromo'n
+'CustTenure'n 'Demog_Homeval'n 'IMP_AvgSale3Yr_DP'n 'LastProdAmt'n
+   'MnthsLastPur'n
+%mend dm_interval_input;
+%global dm_num_interval_input;
+%let dm_num_interval_input = 10 ;
+%macro dm_binary_input;
+%mend dm_binary_input;
+%global dm_num_binary_input;
+%let dm_num_binary_input = 0;
+%macro dm_nominal_input;
+   'Cnt1Yr_DP'n 'CntPur3Yr'n 'CntPur3Yr_DP'n
+%mend dm_nominal_input;
+%global dm_num_nominal_input;
+%let dm_num_nominal_input = 3 ;
+%macro dm_ordinal_input;
+%mend dm_ordinal_input;
+%global dm_num_ordinal_input;
+%let dm_num_ordinal_input = 0;
+%macro dm_class_input;
+   'Cnt1Yr_DP'n 'CntPur3Yr'n 'CntPur3Yr_DP'n
+%mend dm_class_input;
+%global dm_num_class_input;
+%let dm_num_class_input = 3 ;
+%macro dm_segment;
+   '_CLUSTER_ID_'n
+%mend dm_segment;
+%global dm_num_segment;
+%let dm_num_segment = 1 ;
+%macro dm_id;
+%mend dm_id;
+%global dm_num_id;
+%let dm_num_id = 0;
+%macro dm_text;
+%mend dm_text;
+%global dm_num_text;
+%let dm_num_text = 0;
+%macro dm_strat_vars;
+   'Status'n '_CLUSTER_ID_'n
+%mend dm_strat_vars;
+%global dm_num_strat_vars;
+%let dm_num_strat_vars = 2 ;
+*------------------------------------------------------------*;
+  * Component Code;
+*------------------------------------------------------------*;
+proc gradboost data=&dm_datalib..'_input_94SIAI4DPURFQ0U1N5NDOMP12'n(&dm_data_caslib)
+     earlystop(tolerance=0 stagnation=5 minimum=NO metric=MCR)
+     binmethod=QUANTILE
+     maxbranch=3
+     assignmissing=USEINSEARCH minuseinsearch=1
+     ntrees=700 learningrate=0.1 samplingrate=0.6 lasso=0 ridge=1 maxdepth=7 numBin=78 minleafsize=5
+     seed=12345
+     printtarget
+  ;
+  partition rolevar='_PartInd_'n (TRAIN='1' VALIDATE='0');
+  target 'Status'n / level=nominal;
+  input %dm_interval_input / level=interval;
+  input %dm_binary_input %dm_nominal_input %dm_ordinal_input %dm_unary_input  / level=nominal;
+  ods output
+     VariableImportance   = &dm_lib..varimportance
+     Fitstatistics        = &dm_data_outfit
+     PredProbName = &dm_lib..PredProbName
+     PredIntoName = &dm_lib..PredIntoName
+  ;
+  savestate rstore=&dm_datalib.._94SIAI4DPURFQ0U1N5NDOMP12_ast;
+run;
